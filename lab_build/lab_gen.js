@@ -19,7 +19,7 @@ const {
 } = require("./lab_utils");
 const { renderTemplate } = require("./template.js");
 const { BuildEnvs } = require("../enums.js");
-const { writeAuthPages } = require("../auth/auth_pages.js");
+const { authWidgetUrl } = require("../config.js");
 
 shell.config.silent = true;
 
@@ -29,8 +29,9 @@ function generateLab(labpath, build_options) {
   data.options.production = (build_options.env === BuildEnvs.PRODUCTION);
   data.options.testing = (build_options.env === BuildEnvs.TESTING);
   data.options.local = (build_options.env === BuildEnvs.LOCAL);
-  // Virtual Labs sign-in, unless built with --disableAuth (docs/auth.md).
-  data.auth = build_options.addAuth !== false ? { api: build_options.vlabsEnv && build_options.vlabsEnv.authApi } : null;
+  // Virtual Labs sign-in widget, unless built with --disableAuth
+  // (docs/auth.md).
+  data.auth_widget = authWidgetUrl(build_options);
   const template_file = "skeleton.html";
   const component_files = config.commonComponents;
 
@@ -60,14 +61,6 @@ function generateLab(labpath, build_options) {
     }
   }
   buildLabPages(config.pages, labpath, template_file, component_files);
-  if (data.auth) {
-    writeAuthPages(path.join(labpath, "build"), {
-      prefix: "",
-      site_name: data.lab_display_name || data.lab,
-      home: "Introduction.html",
-      auth_api: data.auth.api,
-    });
-  }
 }
 
 function moveToDeployDir(labpath) {

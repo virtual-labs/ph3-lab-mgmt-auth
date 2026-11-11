@@ -109,6 +109,24 @@ const VLAB_INFRA_CONFIG = {
   }
 };
 
+// Virtual Labs sign-in (docs/auth.md): the auth service whose widget.js every
+// page loads, by build environment. VLAB_AUTH_URL overrides it.
+const AUTH_URL = {
+  "production": "https://auth.vlabs.ac.in",
+  "testing": "https://auth.vlabs.ac.in",
+  "local": "http://localhost:8080"
+};
+
+// authWidgetUrl returns the sign-in widget's URL for a build, or null when
+// the build leaves sign-in out (--disableAuth).
+function authWidgetUrl(options) {
+  if (options.addAuth === false) {
+    return null;
+  }
+  const base = process.env.VLAB_AUTH_URL || AUTH_URL[options.env] || AUTH_URL.production;
+  return base.replace(/\/+$/, "") + "/widget.js";
+}
+
 module.exports.Experiment = Experiment;
 module.exports.Lab = Lab;
 module.exports.build_path = build_path;
@@ -116,3 +134,4 @@ module.exports.assets_path = assets_path;
 module.exports.isURL = isURL;
 module.exports.PROJECT_ROOT = PROJECT_ROOT;
 module.exports.VLAB_INFRA_CONFIG = VLAB_INFRA_CONFIG; 
+module.exports.authWidgetUrl = authWidgetUrl;

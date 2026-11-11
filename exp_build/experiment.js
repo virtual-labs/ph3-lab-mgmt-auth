@@ -15,8 +15,6 @@ const {
 } = require("../enums.js");
 const { Plugin } = require("./plugin.js");
 const log = require("../logger.js");
-const { convert } = require("html-to-text");
-const { writeAuthPages } = require("../auth/auth_pages.js");
 
 function getAssessmentPath(src, units) {
   let assessmentPath = [];
@@ -231,17 +229,6 @@ class Experiment {
     // post build
     if (options.plugins) {
       Plugin.processPostBuildPlugins(exp_info, options);
-    }
-
-    // Virtual Labs sign-in pages, unless built with --disableAuth
-    // (docs/auth.md).
-    if (options.addAuth !== false) {
-      writeAuthPages(exp_info.bp, {
-        prefix: "assets/",
-        site_name: lab_data.exp_name || convert(exp_info.name, { selectors: [{ selector: "h1", options: { uppercase: false } }] }),
-        home: "index.html",
-        auth_api: options.vlabsEnv && options.vlabsEnv.authApi,
-      });
     }
 
     // generate service worker

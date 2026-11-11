@@ -34,7 +34,7 @@ function helper() {
   console.log("  --validateExpDesc    validate the experiment description and assessment files");
   console.log("  --disablePlugin      disable the plugins");
   console.log("  --disableAnalytics   disable the analytics configuration");
-  console.log("  --disableAuth        leave out Virtual Labs sign-in (docs/auth.md)");
+  console.log("  --disableAuth        leave out the Virtual Labs sign-in widget (docs/auth.md)");
   console.log("  --deploy             deploy the experiment locally");
   console.log("  --env                environment to build the experiment");
   console.log("\n");
@@ -253,8 +253,6 @@ function readEnvVars() {
 
   vlabsEnv.expDeployBaseDir = process.env.VLAB_EXP_DEPLOY_BASE;
   vlabsEnv.labDeployBaseDir = process.env.VLAB_LAB_DEPLOY_BASE;
-  // Auth service URL for sign-in, if not the default (docs/auth.md).
-  vlabsEnv.authApi = process.env.VLAB_AUTH_API;
 
   return vlabsEnv;
 }

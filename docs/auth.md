@@ -1,64 +1,66 @@
 # Virtual Labs sign-in
 
-Lab and experiment builds include Virtual Labs sign-in, backed by the auth
-service ([tool-virtual-labs-auth-analytics-iiith](https://github.com/virtual-labs/tool-virtual-labs-auth-analytics-iiith)).
+Lab and experiment builds include Virtual Labs sign-in. Accounts live in the
+auth service at `auth.vlabs.ac.in`
+([tool-virtual-labs-auth-analytics-iiith](https://github.com/virtual-labs/tool-virtual-labs-auth-analytics-iiith)).
+It serves the sign-in and registration pages itself, so builds contain no
+sign-in pages, only the service's header widget.
 
 ## What a build gets
 
-- **Every page:** a **Sign in** button in the header. Once the user signs in,
-  it becomes an account menu with *My profile* and *Sign out*. Until the
-  registration form is saved, the menu also shows *Complete your
-  registration*. Simulation pages have no header, but they still load the
-  client.
-- **`login.html` and `profile.html`:** written at the root of every build,
-  the lab's and each experiment's.
-  - `login.html` is email-first sign-in. It covers passwords, Google /
-    Microsoft / institution sign-in, email verification for new accounts,
-    and password reset.
-  - `profile.html` is the registration form. Its institution field suggests
-    names from the AISHE directory while the user types.
+Every page gets two things:
+
+- **a slot in the header:** `<div class="vl-auth ml-auto" data-vlabs-auth></div>`;
+- **the widget:** `<script src="https://auth.vlabs.ac.in/widget.js" defer></script>`.
+
+The widget fills the slot:
+
+- **Signed out:** a **Sign in** button. It opens
+  `https://auth.vlabs.ac.in/login?return_to=<this page>`. After signing in,
+  users come back to the page they started from; new accounts fill in the
+  registration form on the way.
+- **Signed in:** the user's picture (from Google, GitHub or their
+  institution, else their initials) and first name. The menu offers *My
+  profile* and *Sign out*. Until the registration form is saved, it also
+  offers *Complete your registration*.
 - **Shared session:** users sign in once for every lab and experiment. The
   session cookie belongs to `vlabs.ac.in`.
 - **Referral links:** any page opened with `?ref=CODE` remembers the code for
   30 days, across labs. The code fills in the referral code on the
   registration form.
 
-After signing in, users go back to the page they started from. New accounts
-fill in the registration form first.
+Simulation pages have no header, but they still load the widget, which
+keeps referral codes working there.
+
+Other scripts on a page can use `window.VlabsAuth`, for example
+`VlabsAuth.session()` for the signed-in user. The auth service's README
+describes it.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `assets/js/vlabs-auth.js` | API client, header widget, referral codes; loaded on every page |
-| `assets/js/vlabs-auth-login.js`, `assets/js/vlabs-auth-profile.js`, `assets/js/vlabs-auth-forms.js` | the two pages |
-| `assets/css/vlabs-auth.css` | styles, on top of `vlabs-style.css` |
-| `auth/templates/` | `login.html` / `profile.html` templates, written by `auth/auth_pages.js` |
-| `lab_build/page-templates/auth-head.handlebars` | lab pages: settings, stylesheet and script |
-| `lab_build/skeleton.html` | lab pages: the header slot (`data-vlabs-auth`) |
-| `exp_build/templates/partials/commons.handlebars`, `header.handlebars` | experiment pages: the same |
+| `config.js` (`authWidgetUrl`) | the widget's URL for a build |
+| `lab_build/page-templates/auth-head.handlebars` | lab pages: the widget's `<script>` |
+| `lab_build/skeleton.html` | lab pages: the header slot |
+| `exp_build/templates/partials/commons.handlebars` | experiment pages: the widget's `<script>` |
+| `exp_build/templates/partials/header.handlebars` | experiment pages: the header slot |
 
-## Settings
+## Choosing the auth service
 
-The pages read their settings from `<meta>` tags, which the build writes:
-
-| Meta tag | Value |
+| Build | Widget |
 |---|---|
-| `vlabs-auth-pages` | directory of `login.html` / `profile.html`, relative to the page |
-| `vlabs-auth-home` | where to go after signing in when no page was given (`Introduction.html` for labs, `index.html` for experiments) |
-| `vlabs-auth-api` | the auth service, only when `VLAB_AUTH_API` is set |
+| `--env=production`, `--env=testing` | `https://auth.vlabs.ac.in/widget.js` |
+| `--env=local` | `http://localhost:8080/widget.js`, the auth service's local setup |
 
-How a build chooses the auth service:
-
-- **By default:** pages on `*.vlabs.ac.in` use `https://auth.vlabs.ac.in`.
-  Pages anywhere else use port 8080 of their own host, which is the auth
-  service's local setup.
-- **`VLAB_AUTH_API` environment variable:** set it to build against another
-  auth service, e.g. `VLAB_AUTH_API=https://auth-test.vlabs.ac.in`.
+- **`VLAB_AUTH_URL` environment variable:** set it to build against another
+  auth service, e.g. `VLAB_AUTH_URL=https://auth-test.vlabs.ac.in`.
 - **`--disableAuth`:** leaves sign-in out of a build entirely.
 
 The auth service must allow the pages' origin: `frontend.allowed_domains`
-covers `*.vlabs.ac.in`.
+covers `*.vlabs.ac.in`. On other sites (a GitHub Pages preview, say) the
+widget still shows **Sign in**, but it can't see the session, and users land
+on their profile page after signing in instead of coming back.
 
 ## Trying it locally
 
